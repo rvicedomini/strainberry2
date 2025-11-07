@@ -16,13 +16,13 @@ Strainberry has been developed and tested under a Linux environment.
 Clone the repository:
 
 ```
-git clone https://github.com/rvicedomini/rust-strainberry.git
+git clone https://github.com/rvicedomini/strainberry2.git
 ```
 
 To build and install the `strainberry2` executable in your system:
 
 ```
-cd rust-strainberry
+cd strainberry2
 cargo install --path .
 ```
 
