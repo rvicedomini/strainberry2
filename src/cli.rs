@@ -36,7 +36,7 @@ pub struct Options {
     // OTHER OPTIONS
     // ----------------
 
-    /// Disable assembly de-replication
+    /// Disable input de-replication
     #[arg(long = "no-derep", help_heading = CLI_HH_OTHERS)]
     pub no_derep: bool,
 
