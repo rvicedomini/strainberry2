@@ -251,6 +251,8 @@ impl<'a> Phaser<'a> {
             return (HashMap::default(),vec![]);
         }
 
+        // spdlog::trace!("phasing variants @ {ref_interval}");
+
         let mut haplotypes: HashMap<SeqInterval,Vec<Haplotype>> = HashMap::new();
         let mut succinct_records: HashMap<BamRecordId,SuccinctSeq> = HashMap::new();
 
@@ -269,6 +271,7 @@ impl<'a> Phaser<'a> {
             if var.is_none() {
                 break 
             };
+
             let target_pos = pileup.pos() as usize;
             let mut var_position = var.unwrap().pos;
             let mut var_nucleotides = var.unwrap().alleles.iter().map(|x| x.0 as u8).collect_vec();
@@ -287,18 +290,11 @@ impl<'a> Phaser<'a> {
             let edges = self.process_pileup(&pileup, ref_interval.tid, &mut succinct_records, &mut supporting_sreads, &var_nucleotides);
             lookback_positions.push_back(var_position);
 
-            // if this is the start a new phased block
+            // if this is the start of a new phased block
             if lookback_positions.len() == 1 {
                 phasedblock.init(var_position, var_nucleotides);
                 continue
             }
-
-            // if self.ref_db.names[ref_interval.tid].as_str() == "83" && [2947102].contains(&phasedblock.begin()) {
-            //     spdlog::trace!("Current haplotypes @ {}:{target_pos}", self.ref_db.names[ref_interval.tid].as_str());
-            //     for ht in phasedblock.haplotypes().values() {
-            //         spdlog::trace!("  * {ht}");
-            //     }
-            // }
 
             // if no available edges
             if edges.is_empty() {
@@ -311,13 +307,6 @@ impl<'a> Phaser<'a> {
                 lookback_positions.push_back(var_position);
                 continue
             }
-
-            // if self.ref_db.names[ref_interval.tid].as_str() == "83" && [2947102].contains(&phasedblock.begin()) {
-            //     spdlog::trace!("Edges @ {}:{target_pos}", self.ref_db.names[ref_interval.tid].as_str());
-            //     for e in &edges {
-            //         spdlog::trace!("  * {} -> {}", e.0 as char, e.1 as char);
-            //     }
-            // }
 
             // identify haplotypes that cannot be extended with current edges
             let unsupported_haplotypes = phasedblock.haplotypes().iter()
@@ -363,13 +352,6 @@ impl<'a> Phaser<'a> {
             //     spdlog::trace!("  * {}", phasedblock.haplotypes().get(hid).unwrap());
             // }
 
-            // if self.ref_db.names[ref_interval.tid].as_str() == "83" && [2947102].contains(&phasedblock.begin()) {
-            //     spdlog::trace!("Extended haplotypes @ {}:{target_pos}", self.ref_db.names[ref_interval.tid].as_str());
-            //     for ht in phasedblock.haplotypes().values() {
-            //         spdlog::trace!("  * {ht}");
-            //     }
-            // }
-
             let (unsupported_haplotypes, ambiguous_haplotypes) = self.validate_haplotypes(&succinct_records, &candidate_records, &phasedblock);
 
             if !unsupported_haplotypes.is_empty() && (var_position - phasedblock.begin() + 1 > self.opts.lookback) {
@@ -382,12 +364,6 @@ impl<'a> Phaser<'a> {
                 continue;
             }
             if !unsupported_haplotypes.is_empty() {
-                // if self.ref_db.names[ref_interval.tid].as_str() == "83" && [2947102].contains(&phasedblock.begin()) {
-                //     spdlog::trace!("Unsupported haplotypes");
-                //     for hid in &unsupported_haplotypes {
-                //         spdlog::trace!("  * {}", phasedblock.haplotypes().get(hid).unwrap());
-                //     }
-                // }
                 for hid in unsupported_haplotypes {
                     phasedblock.remove_haplotype(hid);
                 }
@@ -395,47 +371,32 @@ impl<'a> Phaser<'a> {
 
             let is_ambiguous = !ambiguous_haplotypes.is_empty(); // is_ambiguous |= !ambiguous_haplotypes.is_empty();
 
-            // if ambiguous extension, create a new phaseset (should a minimum of 3 SNVs be requested here too?)
-            if is_ambiguous && (var_position - phasedblock.begin() > self.opts.lookback) {
-                // if self.ref_db.names[ref_interval.tid].as_str() == "83" && [2947102].contains(&phasedblock.begin()) {
-                //     spdlog::trace!("Ambiguous extension; split and init new phasedblock");
-                //     for hid in &ambiguous_haplotypes {
-                //         spdlog::trace!("  * {}", phasedblock.haplotypes().get(hid).unwrap());
-                //     }
-                // }
-                
-                phasedblock.split_and_init(0);
-                let phased_interval = phasedblock.interval().unwrap();
-                haplotypes.insert(phased_interval, phasedblock.drain());
+            // if ambiguous extension, create a new phaseset
+            if is_ambiguous {
+
+                if var_position - phasedblock.begin() > self.opts.lookback {
+                    phasedblock.split_and_init(0);
+                    let phased_interval = phasedblock.interval().unwrap();
+                    haplotypes.insert(phased_interval, phasedblock.drain());
+                    phasedblock.init(var_position, var_nucleotides);
+                    lookback_positions.clear();
+                    lookback_positions.push_back(var_position);
+                    continue;
+                    // let mut new_phasedblock = phasedblock.split_and_init(self.opts.lookback);
+                    // let phased_interval = phasedblock.interval().unwrap();
+                    // haplotypes.insert(phased_interval, phasedblock.drain());
+                    // std::mem::swap(&mut phasedblock, &mut new_phasedblock);
+                    // continue;
+                }
+
                 phasedblock.init(var_position, var_nucleotides);
-                lookback_positions.clear();
-                lookback_positions.push_back(var_position);
-                continue;
-
-                // let mut new_phasedblock = phasedblock.split_and_init(self.opts.lookback);
-                // let phased_interval = phasedblock.interval().unwrap();
-                // haplotypes.insert(phased_interval, phasedblock.drain());
-                // std::mem::swap(&mut phasedblock, &mut new_phasedblock);
-                // continue;
+                continue
             }
-            // if self.ref_db.names[ref_interval.tid].as_str() == "83" && [2947102].contains(&phasedblock.begin()) {
-            //     spdlog::trace!("Deleted ambiguous haplotypes");
-            //     for hid in &ambiguous_haplotypes {
-            //         spdlog::trace!("  * {}", phasedblock.haplotypes().get(hid).unwrap());
-            //     }
+            // // discard ambiguous haplotypes if phased region was too short
+            // for hid in ambiguous_haplotypes {
+            //     phasedblock.remove_haplotype(hid);
             // }
-            // discard ambiguous haplotypes if phased region was too short
-            for hid in ambiguous_haplotypes {
-                phasedblock.remove_haplotype(hid);
-            }
         }
-
-        // if self.ref_db.names[ref_interval.tid].as_str() == "83" && [2947102].contains(&phasedblock.begin()) {
-        //     spdlog::trace!("Saving remaining haplotypes:");
-        //     for ht in phasedblock.haplotypes().values() {
-        //         spdlog::trace!("  * {ht}");
-        //     }
-        // }
 
         let phased_interval = phasedblock.interval().unwrap();
         haplotypes.insert(phased_interval, phasedblock.drain());
