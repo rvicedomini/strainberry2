@@ -372,30 +372,31 @@ impl<'a> Phaser<'a> {
             let is_ambiguous = !ambiguous_haplotypes.is_empty(); // is_ambiguous |= !ambiguous_haplotypes.is_empty();
 
             // if ambiguous extension, create a new phaseset
-            if is_ambiguous {
-
-                if var_position - phasedblock.begin() > self.opts.lookback {
-                    phasedblock.split_and_init(0);
-                    let phased_interval = phasedblock.interval().unwrap();
-                    haplotypes.insert(phased_interval, phasedblock.drain());
-                    phasedblock.init(var_position, var_nucleotides);
-                    lookback_positions.clear();
-                    lookback_positions.push_back(var_position);
-                    continue;
-                    // let mut new_phasedblock = phasedblock.split_and_init(self.opts.lookback);
-                    // let phased_interval = phasedblock.interval().unwrap();
-                    // haplotypes.insert(phased_interval, phasedblock.drain());
-                    // std::mem::swap(&mut phasedblock, &mut new_phasedblock);
-                    // continue;
-                }
-
+            if is_ambiguous && (var_position - phasedblock.begin() > self.opts.lookback) {
+                phasedblock.split_and_init(0);
+                let phased_interval = phasedblock.interval().unwrap();
+                haplotypes.insert(phased_interval, phasedblock.drain());
                 phasedblock.init(var_position, var_nucleotides);
-                continue
+                lookback_positions.clear();
+                lookback_positions.push_back(var_position);
+                continue;
+                // let mut new_phasedblock = phasedblock.split_and_init(self.opts.lookback);
+                // let phased_interval = phasedblock.interval().unwrap();
+                // haplotypes.insert(phased_interval, phasedblock.drain());
+                // std::mem::swap(&mut phasedblock, &mut new_phasedblock);
+                // continue;
             }
-            // // discard ambiguous haplotypes if phased region was too short
-            // for hid in ambiguous_haplotypes {
-            //     phasedblock.remove_haplotype(hid);
-            // }
+            // discard ambiguous haplotypes if phased region was too short
+            for hid in ambiguous_haplotypes {
+                phasedblock.remove_haplotype(hid);
+            }
+
+            if phasedblock.is_empty() {
+                phasedblock.init(var_position, var_nucleotides);
+                lookback_positions.clear();
+                lookback_positions.push_back(var_position);
+                continue;
+            }
         }
 
         let phased_interval = phasedblock.interval().unwrap();
