@@ -7,7 +7,7 @@ use std::time::Instant;
 
 use ahash::AHashMap as HashMap;
 use anyhow::{bail,Context};
-use clap::Parser;
+use clap::{crate_name, crate_version, Parser};
 use itertools::Itertools;
 
 use strainberry::alignment;
@@ -60,6 +60,8 @@ fn run_pipeline(mut opts: cli::Options) -> anyhow::Result<(), anyhow::Error> {
         },
         _ => unreachable!()
     };
+
+    spdlog::info!("{} {}", crate_name!(), crate_version!());
 
     let mut reference_path = PathBuf::from_str(&opts.reference)?;
     let output_dir = Path::new(&opts.output_dir);
