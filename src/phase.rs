@@ -146,13 +146,17 @@ impl<'a> Phaser<'a> {
         let sread_haplotypes = self::separate_reads(&succinct_seqs, &haplotypes, 1);
 
         let mut haplograph = HaploGraph::new(haplotypes, sread_haplotypes);
-        let dot_file = format!("{}_{}-{}.raw.dot", self.ref_db.names[ref_interval.tid], ref_interval.beg, ref_interval.end);
-        haplograph.write_dot(&self.dots_dir.join(dot_file)).unwrap();
+        if self.opts.debug {
+            let dot_file = format!("{}_{}-{}.raw.dot", self.ref_db.names[ref_interval.tid], ref_interval.beg, ref_interval.end);
+            haplograph.write_dot(&self.dots_dir.join(dot_file)).unwrap();
+        }
         
         // Merge contiguous haplotypes when it is not ambiguous to do so
         let haplotypes: HashMap<HaplotypeId,Haplotype> = haplograph.scaffold_haplotypes(&variant_positions, 5, 0.8, self.opts.min_snv);
-        let dot_file = format!("{}_{}-{}.final.dot", self.ref_db.names[ref_interval.tid], ref_interval.beg, ref_interval.end);
-        haplograph.write_dot(&self.dots_dir.join(dot_file)).unwrap();
+        if self.opts.debug {
+            let dot_file = format!("{}_{}-{}.final.dot", self.ref_db.names[ref_interval.tid], ref_interval.beg, ref_interval.end);
+            haplograph.write_dot(&self.dots_dir.join(dot_file)).unwrap();
+        }
 
         let seq2haplo = self::separate_reads(&succinct_seqs, &haplotypes, 1);
         self.write_reads(&haplotypes, &seq2haplo).unwrap();
