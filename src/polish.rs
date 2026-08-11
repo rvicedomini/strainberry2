@@ -5,7 +5,7 @@ pub mod window;
 use std::{path::Path, str::FromStr};
 
 use ahash::AHashMap as HashMap;
-use anyhow::{Context, Result};
+use anyhow::{bail,Context, Result};
 use itertools::Itertools;
 
 use crate::bitseq::BitSeq;
@@ -24,15 +24,18 @@ pub fn compute_alignments(target_path: &Path, read_path: &Path, opts: &crate::cl
         crate::cli::Mode::Nano => "-xlr:hq",
     };
     
-    let args = ["-t", &opts.nb_threads.to_string(), "-c", mm2_preset, target_path.to_str().unwrap(), read_path.to_str().unwrap()];
-    let stdout = Command::new("minimap2").args(args)
+    let mm2_args = ["-t", &opts.nb_threads.to_string(), "-c", mm2_preset, target_path.to_str().unwrap(), read_path.to_str().unwrap()];
+    let mut minimap2 = Command::new("minimap2")
+        .args(mm2_args)
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
-        .spawn().context("cannot run minimap2")?
-        .stdout
-        .with_context(|| "Could not capture standard output.")?;
+        .spawn()
+        .context("cannot run minimap2")?;
 
-    let reader = BufReader::new(stdout);
+    let mm2_stdout = minimap2.stdout.take()
+        .context("Could not capture minimap2 standard output.")?;
+
+    let reader = BufReader::new(mm2_stdout);
     let alignments = reader.lines()
         .map_while(Result::ok)
         .filter_map(|line| {
@@ -45,6 +48,11 @@ pub fn compute_alignments(target_path: &Path, read_path: &Path, opts: &crate::cl
                 .unwrap()
         })
         .collect_vec();
+
+    let mm2_status = minimap2.wait().context("minimap2 did not run successfully")?;
+    if !mm2_status.success() {
+        bail!("minimap2 exited with {mm2_status}");
+    }
 
     // filter alignments
 

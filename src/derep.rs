@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
-use anyhow::{Context, Result};
+use anyhow::{bail,Context, Result};
 use ahash::{AHashMap as HashMap, AHashSet as HashSet};
 use itertools::Itertools;
 // use flate2::read::MultiGzDecoder;
@@ -23,23 +23,30 @@ fn compute_matching_intervals(fasta_path: &Path, opts: &Options) -> Result<HashM
 
     // let args = ["-t", &opts.nb_threads.to_string(), "-cDP", "--dual=no", "--no-long-join", "-r85", fasta_path_str, fasta_path_str];
     // let args = ["-t", &opts.nb_threads.to_string(), "-c", "-xasm20", "-DP", "--dual=no", fasta_path_str, fasta_path_str];
-    let args = ["-t", &opts.nb_threads.to_string(), "-c", "-xasm20", "-DP", "--dual=no", "--no-long-join", "-r100", "-z200", "-g2k", fasta_path_str, fasta_path_str];
+    let mm2_args = ["-t", &opts.nb_threads.to_string(), "-c", "-xasm20", "-DP", "--dual=no", "--no-long-join", "-r100", "-z200", "-g2k", fasta_path_str, fasta_path_str];
 
-    let stdout = Command::new("minimap2").args(args)
+    let mut minimap2 = Command::new("minimap2")
+        .args(mm2_args)
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
-        .spawn().context("cannot run minimap2")?
-        .stdout
-        .with_context(|| "Could not capture standard output.")?;
-    
-    // eprintln!("  running command: minimap2 {}", args.join(" "));
-    let reader = BufReader::new(stdout);
+        .spawn()
+        .context("cannot run minimap2")?;
+
+    let mm2_stdout = minimap2.stdout.take()
+        .context("Could not capture minimap2 standard output.")?;
+
+    let reader = BufReader::new(mm2_stdout);
     let alignments: Vec<PafAlignment> = reader.lines()
         .map_while(Result::ok)
         .map(|line| line.trim().to_string())
         .filter(|line| !line.is_empty())
         .map(|line| PafAlignment::from_str(&line).with_context(||format!("error parsing line:\n{line}")).unwrap())
         .collect();
+
+    let mm2_status = minimap2.wait().context("minimap2 did not run successfully")?;
+    if !mm2_status.success() {
+        bail!("minimap2 exited with {mm2_status}");
+    }
 
     let mut matching_intervals: HashMap<String,Vec<(usize,usize,String)>> = HashMap::new();
     for a in alignments.into_iter().filter(|a| a.query_name != a.target_name) {

@@ -76,31 +76,39 @@ pub fn run_minimap2(reference: &Path, reads: &Path, bam: &Path, opts: &Options) 
     };
     
     let mm2_args = ["-t", &opts.nb_threads.to_string(), "-a", mm2_preset, "--no-long-join", "-r50", "-g2k", "-z200", reference.to_str().unwrap(), reads.to_str().unwrap()];
-    let minimap2 = Command::new("minimap2")
+    let mut minimap2 = Command::new("minimap2")
         .args(mm2_args)
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn().context("cannot run minimap2")?;
 
     let samtools_args = ["sort", "--threads", &opts.nb_threads.to_string(), "-o", bam.to_str().unwrap()];
-    let _samtools = Command::new("samtools")
+    let _samtools_sort = Command::new("samtools")
         .args(samtools_args)
-        .stdin(Stdio::from(minimap2.stdout.unwrap()))
+        .stdin(Stdio::from(minimap2.stdout.take().unwrap()))
         .stderr(Stdio::null())
         .output()
         .expect("cannot run samtools sort");
+
+    let status = minimap2.wait().context("minimap2 did not run successfully")?;
+    if !status.success() {
+        bail!("minimap2 exited with {status}");
+    }
 
     // bam indexing
 
     let nb_threads = opts.nb_threads.max(4);
     let samtools_args = ["index", "-@", &nb_threads.to_string(), bam.to_str().unwrap()];
-    let mut samtools = Command::new("samtools")
+    let mut samtools_index = Command::new("samtools")
         .args(samtools_args)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn().context("cannot run samtools index")?;
     
-    samtools.wait()?;
+    let status = samtools_index.wait().context("samtools index did not run successfully")?;
+    if !status.success() {
+        bail!("samtools index exited with {status}");
+    }
 
     Ok(())
 }
