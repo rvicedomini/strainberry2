@@ -2,7 +2,6 @@ use std::borrow::Cow;
 use std::cell::UnsafeCell;
 use std::fs::File;
 use std::io::{BufRead,BufReader,Write,BufWriter};
-use std::mem::MaybeUninit;
 use std::path::Path;
 
 use ahash::AHashMap as HashMap;
@@ -20,23 +19,6 @@ pub fn check_dependencies(dependencies:&[&str]) -> Result<()> {
         }
     }
     Ok(())
-}
-
-pub fn get_maxrss() -> f64 {
-    
-    let usage_self = unsafe {
-        let mut usage = MaybeUninit::uninit();
-        assert_eq!(libc::getrusage(libc::RUSAGE_SELF, usage.as_mut_ptr()), 0);
-        usage.assume_init()
-    };
-
-    let usage_children = unsafe {
-        let mut usage = MaybeUninit::uninit();
-        assert_eq!(libc::getrusage(libc::RUSAGE_CHILDREN, usage.as_mut_ptr()), 0);
-        usage.assume_init()
-    };
-
-    usage_self.ru_maxrss.max(usage_children.ru_maxrss) as f64 / (1024.0 * 1024.0)
 }
 
 

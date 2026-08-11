@@ -38,7 +38,7 @@ fn main() -> anyhow::Result<(), anyhow::Error> {
 
     run_pipeline(opts)?;
 
-    spdlog::info!("Time: {:.2}s | MaxRSS: {:.2}GB", t_start.elapsed().as_secs_f64(), utils::get_maxrss());
+    spdlog::info!("Elapsed time: {:.2}s", t_start.elapsed().as_secs_f64());
 
     Ok(())
 }
