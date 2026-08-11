@@ -295,8 +295,8 @@ pub fn merge_aware_alignments(aware_alignments: Vec<AwareAlignment>, aware_conti
 
     let mut merged_alignments: Vec<AwareAlignment> = Vec::with_capacity(aware_alignments.len());
     for a in aware_alignments {
-        if let Some(last) = merged_alignments.last_mut() {
-            if a.aware_id == last.aware_id && a.strand == last.strand && ((a.strand == b'+' && last.target_beg < a.target_beg) || (a.strand != b'+' && a.target_beg < last.target_beg)) {
+        if let Some(last) = merged_alignments.last_mut()
+            && a.aware_id == last.aware_id && a.strand == last.strand && ((a.strand == b'+' && last.target_beg < a.target_beg) || (a.strand != b'+' && a.target_beg < last.target_beg)) {
                 let ctg = aware_contigs[a.aware_id];
                 last.query_end = last.query_end.max(a.query_end);
                 last.target_beg = last.target_beg.min(a.target_beg);
@@ -309,7 +309,6 @@ pub fn merge_aware_alignments(aware_alignments: Vec<AwareAlignment>, aware_conti
                 last.nb_shared_snvs += a.nb_shared_snvs;
                 last.nb_alt_matches = last.nb_alt_matches.max(a.nb_alt_matches);
                 continue
-            }
         }
         merged_alignments.push(a);
     }

@@ -571,13 +571,12 @@ fn best_sread_haplotypes(sread: &SuccinctSeq, haplotypes: &[&Haplotype], min_sha
 
     let idx = haplotypes.partition_point(|ht| ht.tid() < sread.tid() || (ht.tid() == sread.tid() && ht.end() <= sread.beg()));
     for ht in haplotypes[idx..].iter().take_while(|ht| ht.beg() < sread.end()) {
-        if let Some(hit) = sread_haplotype_distance(sread, ht) {
-            if hit.nb_pos > 0 && hit.nb_pos >= min_shared_pos && hit.dist < hit.nb_pos {
+        if let Some(hit) = sread_haplotype_distance(sread, ht)
+            && hit.nb_pos > 0 && hit.nb_pos >= min_shared_pos && hit.dist < hit.nb_pos {
                 let range = ht.beg()..ht.end();
                 candidates.entry(range)
                     .or_insert(vec![])
                     .push(hit);
-            }
         }
     }
 

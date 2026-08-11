@@ -152,11 +152,9 @@ pub fn derep_assembly(fasta_path: &Path, work_dir: &Path, opts: &Options) -> Res
                 
                 let mut merged_intervals = Vec::with_capacity(sorted_intervals.len());
                 for (beg,end,_) in sorted_intervals {
-                    if let Some((_last_beg,last_end)) = merged_intervals.last_mut() {
-                        if beg <= *last_end {
-                            *last_end = std::cmp::max(*last_end, end);
-                            continue
-                        }
+                    if let Some((_last_beg,last_end)) = merged_intervals.last_mut() && beg <= *last_end {
+                        *last_end = std::cmp::max(*last_end, end);
+                        continue
                     }
                     merged_intervals.push((beg,end));
                 }
