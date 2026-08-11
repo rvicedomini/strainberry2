@@ -318,7 +318,7 @@ impl AwareGraph {
     pub fn add_bridges(&mut self, aware_alignments:&HashMap<usize,Vec<AwareAlignment>>) {
         self.clear_transitive_edges();
         // add bridges from aware alignments
-        for (_query_idx, alignments) in aware_alignments.iter() {
+        for alignments in aware_alignments.values() {
             let mut first_indices: Vec<usize> = vec![];
             let mut last_indices: Vec<usize> = vec![];
             // find bifurcation nodes
@@ -393,7 +393,7 @@ impl AwareGraph {
         let mut visited: HashSet<(usize,u8)> = HashSet::new();
         let mut junctions: Vec<Junction> = Vec::new();
         for node_id in self.nodes.keys().cloned() {
-            for node_dir in [b'+',b'-'] {
+            for node_dir in *b"+-" {
                 if visited.contains(&(node_id,node_dir)) {
                     continue
                 }

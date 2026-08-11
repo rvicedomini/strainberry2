@@ -93,13 +93,14 @@ fn run_pipeline(mut opts: cli::Options) -> anyhow::Result<(), anyhow::Error> {
         spdlog::info!("Dereplicated reference written to {}", reference_path.display());
     }
 
-    let bam_path = if !opts.no_derep || opts.bam.is_none() {
-        spdlog::info!("Mapping reads to dereplicated reference");
-        let bam_path = preprocess_dir.join("alignment.bam");
-        utils::run_minimap2(&reference_path, reads_path, &bam_path, &opts)?;
-        bam_path
-    } else {
-        PathBuf::from_str(opts.bam.as_ref().unwrap())?
+    let bam_path = match &opts.bam {
+        Some(bam) if opts.no_derep => PathBuf::from_str(bam)?,
+        _ => {
+            spdlog::info!("Mapping reads to dereplicated reference");
+            let bam_path = preprocess_dir.join("alignment.bam");
+            utils::run_minimap2(&reference_path, reads_path, &bam_path, &opts)?;
+            bam_path
+        }
     };
 
     spdlog::info!("Loading sequences from: {}", reference_path.display());
