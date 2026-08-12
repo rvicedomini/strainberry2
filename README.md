@@ -9,7 +9,7 @@ Strainberry has been developed and tested under a Linux environment.
 
 ### System prerequisites
 
-- Rust compiler >= 1.87
+- Rust compiler >= 1.88
 - CMake >= 3.12
 - Clang compiler (supporting at least C++14)
 
