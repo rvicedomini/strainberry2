@@ -2,47 +2,50 @@
 
 Strainberry2 is the new and improved version of Strainberry. It is conceived to perform strain-level metagenome assembly with modern long reads (e.g., PacBio HiFi, ONT R10.4).
 
++ [Installation](#installation)
+  - [Conda install](#conda-install)
+  - [Build from source](#build-from-source)
++ [Quick usage](#quick-usage)
++ [Other useful parameters](#other-useful-parameters)
++ [Output files](#output-files)
++ [Example](#example)
++ [Citation](#citation)
 
 ## Installation
 
-Strainberry has been developed and tested under a Linux environment.
+Strainberry2 has been developed and tested under a Linux environment.
 
-### System prerequisites
+### Conda install
 
-- Rust compiler >= 1.88
-- CMake >= 3.12
-- Clang compiler (supporting at least C++14)
+The simplest and recommended way to install `strainberry2` (and its dependencies) is through a conda environment (e.g., `strainberry2`):
+```
+conda create -n strainberry2 -c rvicedomini strainberry2
+```
 
 ### Build from source
 
-Clone the repository:
+#### System prerequisites
+
+- Rust >= 1.88
+- CMake >= 3.12
+- A modern C++ compiler (supporting at least the standard C++14)
+- libclang:
+  - Debian/Ubuntu: `libclang-dev`
+  - Fedora: `clang-devel`
+
+#### Build from source
 
 ```
 git clone https://github.com/rvicedomini/strainberry2.git
-```
-
-To build and install the `strainberry2` executable in your system:
-
-```
 cd strainberry2
 cargo install --path .
 ```
 
-### Software dependencies
+#### Software dependencies
 
-Strainberry2 requires the following bioinformatics tool to be available in the system:
+Strainberry2 requires the following bioinformatic tool to be available in the system:
 - samtools >= 1.15
 - minimap2 >= 2.27
-
-A simple way to install these dependencies would be to create a conda environment `strainberry2` as follows:
-```
-conda create -n strainberry2 -c bioconda 'samtools>=1.15' 'minimap2>=2.27'
-```
-
-Then to run strainberry2:
-```
-conda run -n strainberry2 strainberry2 [OPTIONS] --reference <PATH> --out-dir <PATH>
-```
 
 ## Quick usage
 
