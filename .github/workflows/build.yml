@@ -1,0 +1,37 @@
+name: Build strainberry2
+ 
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+ 
+jobs:
+
+  build:
+    name: Build strainberry2
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+ 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc libclang-dev
+ 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.85.0"
+ 
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+ 
+      - name: Install strainberry2
+        run: cargo install --path .
+
+      - name: Test installation
+        run: strainberry2 --version
