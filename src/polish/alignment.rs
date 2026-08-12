@@ -79,32 +79,32 @@ impl Alignment {
 
     pub fn find_breaking_points(&mut self, ref_sequences: &[BitSeq], read_sequences: &[BitSeq], window_len: usize) -> Result<()> {
 
+        use edlib_rs::*;
+
         if !self.breaking_points.is_empty() {
             return Ok(())
         }
 
         if self.cigar.is_empty() { // compute alignment
 
-            use edlib_rs::edlibrs;
-
             let tseq = ref_sequences[self.target_idx].subseq(self.target_beg, self.target_end);
             let mut qseq = read_sequences[self.query_idx].subseq(self.query_beg, self.query_end);
             if self.strand == b'-' { crate::seq::revcomp_inplace(&mut qseq); }
 
-            let ed_cfg = edlibrs::EdlibAlignConfigRs::new(
+            let ed_cfg = EdlibAlignConfigRs::new(
                 -1,
-                edlibrs::EdlibAlignModeRs::EDLIB_MODE_NW,
-                edlibrs::EdlibAlignTaskRs::EDLIB_TASK_PATH,
+                EdlibAlignModeRs::EDLIB_MODE_NW,
+                EdlibAlignTaskRs::EDLIB_TASK_PATH,
                 &[]
             );
 
-            let align_res = edlibrs::edlibAlignRs(&qseq, &tseq, &ed_cfg);
-            if align_res.status != edlibrs::EDLIB_STATUS_OK {
+            let align_res = edlibAlignRs(&qseq, &tseq, &ed_cfg);
+            if align_res.status != EDLIB_RS_STATUS_OK {
                 bail!("edlib: unable to align query {} against target {}", self.query_idx, self.target_idx);
             }
 
             let alignment = align_res.alignment.as_ref().unwrap();
-            let cigar = edlibrs::edlibAlignmentToCigarRs(alignment, &edlibrs::EdlibCigarFormatRs::EDLIB_CIGAR_STANDARD);
+            let cigar = edlibAlignmentToCigarRs(alignment, &EdlibCigarFormatRs::EDLIB_CIGAR_STANDARD);
             self.cigar = CigarString::try_from(cigar.as_bytes()).context("Unable to parse cigar string.")?;
         }
     
