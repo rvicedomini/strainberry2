@@ -29,7 +29,7 @@ conda create -n strainberry2 -c rvicedomini strainberry2
 - Rust >= 1.88
 - CMake >= 3.12
 - A modern C++ compiler (supporting at least the standard C++14)
-- libclang:
+- libclang (needed to build htslib dependency):
   - Debian/Ubuntu: `libclang-dev`
   - Fedora: `clang-devel`
 
@@ -81,16 +81,14 @@ The strain-aware output assembly is written in the `assembly.fasta` file in insi
 
 ## Example
 
-In order to verify that Strainberry2 has been correctly installed, it is possible to test it on a tiny dataset in the `example` sub-directory.
-
-Given a strain-oblivious assembly (e.g., file `assembly.fa.gz`) and a collection of accurate ONT reads (e.g., file `reads.fa.gz`), it is possible to run Strainberry2 using 4 threads as follows:
+In order to verify that Strainberry2 has been correctly installed, you can test it on a tiny dataset in the `example` sub-directory, as follows:
 
 ```
 cd example
 strainberry2 --in-ont reads.fa.gz -r assembly.fa.gz -o output -t 4
 ```
 
-If everything worked as expected, you will find the strain-aware assembly `assembly.fasta` and the corresponding strain-aware assembly graph `assembly.gfa` in the `output` directory. Both files should contain 5 contigs. Each one of them corresponds to the 5 *Escherichia coli* strain sequences present in the input data and collapsed in the input single-contig assembly. 
+If everything worked as expected, you will find the strain-aware assembly `assembly.fasta` and the corresponding strain-aware assembly graph `assembly.gfa` in the `output` directory. Both files should contain five contigs, each corresponding to one of the five *Escherichia coli* strain subsequences which are collapsed in a single contig in the input data.
 
 ## Citation
 
