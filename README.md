@@ -5,8 +5,8 @@ Strainberry2 is the new and improved version of Strainberry. It is conceived to 
 + [Installation](#installation)
   - [Conda install](#conda-install)
   - [Build from source](#build-from-source)
-+ [Quick usage](#quick-usage)
-+ [Other useful parameters](#other-useful-parameters)
++ [Usage](#usage)
+  - [Other useful parameters](#other-useful-parameters)
 + [Output files](#output-files)
 + [Example](#example)
 + [Citation](#citation)
@@ -47,7 +47,7 @@ Strainberry2 requires the following bioinformatic tool to be available in the sy
 - samtools >= 1.15
 - minimap2 >= 2.27
 
-## Quick usage
+## Usage
 
 Strainberry2 requires two input files:
 - **A set of long reads**, preferably in FASTQ format as base qualities are used.
